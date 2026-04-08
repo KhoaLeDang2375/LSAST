@@ -64,13 +64,90 @@ fi
 echo -e "${GREEN}✓ Setup complete${NC}"
 
 # ========================
-# INSTALL
+# CONDA SETUP & ENVIRONMENT
 # ========================
-echo -e "${BLUE}Checking dependencies...${NC}"
-pip install -q -r requirements.txt 2>/dev/null || true
-pip install -q huggingface_hub 2>/dev/null || true
+CONDA_ENV_NAME="ldm"
+CONDA_ENV_FILE="$PROJECT_DIR/environment.yaml"
 
-echo -e "${GREEN}✓ Dependencies installed${NC}"
+# ── 1. Tìm hoặc cài Conda ──────────────────────────────────────────────
+find_conda() {
+    # Thử các vị trí phổ biến
+    for candidate in \
+        "$HOME/miniconda3/bin/conda" \
+        "$HOME/anaconda3/bin/conda" \
+        "/opt/conda/bin/conda" \
+        "/usr/local/conda/bin/conda" \
+        "$(which conda 2>/dev/null)"; do
+        if [ -x "$candidate" ]; then
+            echo "$candidate"; return 0
+        fi
+    done
+    return 1
+}
+
+CONDA_BIN=$(find_conda) || true
+
+if [ -z "$CONDA_BIN" ]; then
+    echo -e "${YELLOW}Conda not found. Installing Miniconda...${NC}"
+    MINICONDA_DIR="$HOME/miniconda3"
+    MINICONDA_SH="/tmp/miniconda_install.sh"
+
+    # Chọn đúng installer theo hệ điều hành & kiến trúc
+    OS_TYPE=$(uname -s)
+    ARCH=$(uname -m)
+    if [ "$OS_TYPE" = "Linux" ]; then
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-${ARCH}.sh"
+    elif [ "$OS_TYPE" = "Darwin" ]; then
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-${ARCH}.sh"
+    else
+        echo -e "${RED}ERROR: Unsupported OS: $OS_TYPE${NC}"
+        exit 1
+    fi
+
+    echo "  Downloading: $MINICONDA_URL"
+    curl -fsSL "$MINICONDA_URL" -o "$MINICONDA_SH" || wget -q "$MINICONDA_URL" -O "$MINICONDA_SH"
+    bash "$MINICONDA_SH" -b -p "$MINICONDA_DIR"
+    rm -f "$MINICONDA_SH"
+
+    CONDA_BIN="$MINICONDA_DIR/bin/conda"
+    echo -e "${GREEN}✓ Miniconda installed at: $MINICONDA_DIR${NC}"
+fi
+
+echo -e "${GREEN}✓ Conda found: $CONDA_BIN${NC}"
+echo "  Version: $($CONDA_BIN --version)"
+
+# Khởi tạo conda trong shell hiện tại
+CONDA_BASE=$($CONDA_BIN info --base 2>/dev/null)
+source "$CONDA_BASE/etc/profile.d/conda.sh" 2>/dev/null || \
+    eval "$($CONDA_BIN shell.bash hook 2>/dev/null)" || true
+
+# ── 2. Tạo hoặc cập nhật môi trường conda ─────────────────────────────
+if ! $CONDA_BIN env list | grep -qE "^${CONDA_ENV_NAME}\s"; then
+    echo -e "${BLUE}Creating conda environment '${CONDA_ENV_NAME}' from ${CONDA_ENV_FILE}...${NC}"
+    echo "  (This may take 5-15 minutes the first time)"
+    $CONDA_BIN env create -f "$CONDA_ENV_FILE" --name "$CONDA_ENV_NAME" || {
+        echo -e "${YELLOW}⚠ Conda env create failed — trying pip fallback...${NC}"
+        pip install -q -r "$PROJECT_DIR/requirements.txt" || true
+    }
+else
+    echo -e "${YELLOW}Conda env '${CONDA_ENV_NAME}' already exists — updating...${NC}"
+    $CONDA_BIN env update -f "$CONDA_ENV_FILE" --name "$CONDA_ENV_NAME" --prune || true
+fi
+
+# ── 3. Kích hoạt môi trường ────────────────────────────────────────────
+conda activate "$CONDA_ENV_NAME" 2>/dev/null || \
+    source "$CONDA_BASE/bin/activate" "$CONDA_ENV_NAME" 2>/dev/null || true
+
+# Kiểm tra pytorch_lightning đã có chưa
+if python -c "import pytorch_lightning" 2>/dev/null; then
+    PL_VER=$(python -c "import pytorch_lightning; print(pytorch_lightning.__version__)")
+    echo -e "${GREEN}✓ pytorch_lightning $PL_VER ready${NC}"
+else
+    echo -e "${YELLOW}pytorch_lightning not found in conda env — installing via pip...${NC}"
+    pip install -q pytorch-lightning==1.9.5 huggingface_hub safetensors gdown || true
+fi
+
+echo -e "${GREEN}✓ Environment ready: ${CONDA_ENV_NAME}${NC}"
 
 # ========================
 # DOWNLOAD DATA FROM GOOGLE DRIVE
