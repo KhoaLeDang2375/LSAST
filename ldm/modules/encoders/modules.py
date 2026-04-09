@@ -159,10 +159,21 @@ class SpatialRescaler(nn.Module):
         return self(x)
 class FrozenCLIPEmbedder(AbstractEncoder):
     """Uses the CLIP transformer encoder for text (from Hugging Face)"""
-    def __init__(self, version="/root/LSAST/clip-vit-large-patch14", device="cuda", max_length=77):
+    def __init__(self, version="openai/clip-vit-large-patch14", device="cuda", max_length=77):
         super().__init__()
-        self.tokenizer = CLIPTokenizer.from_pretrained(version)
-        self.transformer = CLIPTextModel.from_pretrained(version)
+        try:
+            self.tokenizer = CLIPTokenizer.from_pretrained(version)
+            self.transformer = CLIPTextModel.from_pretrained(version)
+        except Exception as e:
+            print(f"Transformers from_pretrained failed ({e}). Auto-downloading via huggingface_hub fallback...")
+            from huggingface_hub import snapshot_download
+            import os
+            # Build an absolute offline cache path based on current working directory
+            offline_dir = os.path.join(os.getcwd(), "clip_offline_cache")
+            if not os.path.exists(offline_dir):
+                snapshot_download(repo_id=version, local_dir=offline_dir)
+            self.tokenizer = CLIPTokenizer.from_pretrained(offline_dir)
+            self.transformer = CLIPTextModel.from_pretrained(offline_dir)
 
         self.device = device
         self.max_length = max_length
