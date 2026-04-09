@@ -116,7 +116,8 @@ class EmbeddingManager(nn.Module):
                 print('Working with IMGAE GUIDING mode')
                 # print(self.initial_embeddings.view(b,1,768).to(device).size())
                 # print(self.initial_embeddings.view(b,1,768).to(device).requires_grad)
-                placeholder_embedding = self.attention(self.initial_embeddings.view(b,1,768).to(device), self.initial_embeddings.view(b,1,768).to(device))[-1].view(self.max_vectors_per_token,768)
+                _init_emb = self.initial_embeddings.view(1, 1, 768).expand(b, 1, 768).to(device)
+                placeholder_embedding = self.attention(_init_emb, _init_emb)[-1].view(self.max_vectors_per_token, 768)
                 # print(placeholder_embedding.size()) 10 1 768 利用attention直接输出10个维度的可学习参数
                 # for param in self.attention.parameters():
                 #     print(param)
