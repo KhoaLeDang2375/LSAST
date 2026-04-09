@@ -313,19 +313,19 @@ fi
 # ========================
 # SHOW TRAINING CONFIG
 # ========================
-echo -e "${BLUE}"
-echo "╔════════════════════════════════════════════════════╗"
-echo "║           TRAINING CONFIGURATION                   ║"
-echo "╚════════════════════════════════════════════════════╝"
-echo -e "${NC}"
-echo "  Run Name:   $RUN_NAME"
-echo "  Data Root:  $DATA_ROOT"
-echo "  Model:      $MODEL_PATH"
-echo "  Config:     $CONFIG"
-echo "  GPU:        $GPU_ID"
-echo "  Output:     $OUTPUT_DIR"
-echo "  Logs:       $LOG_DIR"
-echo ""
+# echo -e "${BLUE}"
+# echo "╔════════════════════════════════════════════════════╗"
+# echo "║           TRAINING CONFIGURATION                   ║"
+# echo "╚════════════════════════════════════════════════════╝"
+# echo -e "${NC}"
+# echo "  Run Name:   $RUN_NAME"
+# echo "  Data Root:  $DATA_ROOT"
+# echo "  Model:      $MODEL_PATH"
+# echo "  Config:     $CONFIG"
+# echo "  GPU:        $GPU_ID"
+# echo "  Output:     $OUTPUT_DIR"
+# echo "  Logs:       $LOG_DIR"
+# echo ""
 
 read -p "Start training? (y/n) " -n 1 -r
 echo
