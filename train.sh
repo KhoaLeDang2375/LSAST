@@ -302,7 +302,13 @@ fi
 # CHECK GPU
 # ========================
 echo -e "${BLUE}Checking GPU...${NC}"
-nvidia-smi -L | head -1 && echo -e "${GREEN}✓ GPU detected${NC}" || echo -e "${YELLOW}⚠ No GPU detected${NC}"
+if command -v nvidia-smi &> /dev/null; then
+    GPU_INFO=$(nvidia-smi -L 2>/dev/null)
+    echo "$GPU_INFO" | head -1
+    echo -e "${GREEN}✓ GPU detected${NC}"
+else
+    echo -e "${YELLOW}⚠ No GPU detected${NC}"
+fi
 
 # ========================
 # SHOW TRAINING CONFIG
