@@ -144,7 +144,7 @@ if python -c "import pytorch_lightning" 2>/dev/null; then
     echo -e "${GREEN}✓ pytorch_lightning $PL_VER ready${NC}"
 else
     echo -e "${YELLOW}pytorch_lightning not found in conda env — installing via pip...${NC}"
-    pip install -q pytorch-lightning==1.9.5 huggingface_hub safetensors gdown || true
+    pip install -q pytorch-lightning==1.9.5 huggingface_hub==0.25.2 safetensors gdown || true
 fi
 
 echo -e "${GREEN}✓ Environment ready: ${CONDA_ENV_NAME}${NC}"
@@ -340,6 +340,7 @@ LOG_FILE="$LOG_DIR/training_$(date +%Y%m%d_%H%M%S).log"
 python main.py \
   --base "$CONFIG" \
   -t \
+  --no-test \
   --actual_resume "$MODEL_PATH" \
   -n "$RUN_NAME" \
   --gpus "$GPU_ID", \
