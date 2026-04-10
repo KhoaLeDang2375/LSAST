@@ -239,12 +239,15 @@ class FrozenCLIPEmbedder(AbstractEncoder):
                 if output_hidden_states:
                     encoder_states = encoder_states + (hidden_states,)
 
-                layer_outputs = encoder_layer(
-                    hidden_states,
-                    attention_mask,
-                    causal_attention_mask,
-                    output_attentions=output_attentions,
-                )
+                layer_kwargs = {"output_attentions": output_attentions}
+                import inspect
+                sig = inspect.signature(encoder_layer.forward)
+                if "attention_mask" in sig.parameters:
+                    layer_kwargs["attention_mask"] = attention_mask
+                if "causal_attention_mask" in sig.parameters:
+                    layer_kwargs["causal_attention_mask"] = causal_attention_mask
+
+                layer_outputs = encoder_layer(hidden_states, **layer_kwargs)
 
                 hidden_states = layer_outputs[0]
 
