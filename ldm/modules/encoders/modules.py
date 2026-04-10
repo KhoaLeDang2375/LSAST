@@ -249,7 +249,10 @@ class FrozenCLIPEmbedder(AbstractEncoder):
 
                 layer_outputs = encoder_layer(hidden_states, **layer_kwargs)
 
-                hidden_states = layer_outputs[0]
+                if isinstance(layer_outputs, tuple):
+                    hidden_states = layer_outputs[0]
+                else:
+                    hidden_states = layer_outputs
 
                 if output_attentions:
                     all_attentions = all_attentions + (layer_outputs[1],)
