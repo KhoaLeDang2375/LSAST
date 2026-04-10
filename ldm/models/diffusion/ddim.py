@@ -282,7 +282,10 @@ class DDIMSampler(object):
             ts_val = ts[0].item() if ts.numel() > 1 else ts.item()
             idx_ctrl = int(ts_val * self.prospect_stages / 1000)
             idx_ctrl = min(idx_ctrl, len(cond) - 3)
+            control_scale = 0.3
             control_canny = controlnet_canny(x_dec, control, ts, cond[idx_ctrl:idx_ctrl+3])
+            if control_canny is not None:
+                control_canny = [c * control_scale for c in control_canny]
             
             x_dec, _ = self.p_sample_ddim(x_dec, cond, ts, control_canny, index=index, use_original_steps=use_original_steps,
                                           unconditional_guidance_scale=unconditional_guidance_scale,
