@@ -287,6 +287,9 @@ class FrozenCLIPEmbedder(AbstractEncoder):
 
             hidden_states = self.embeddings(input_ids=input_ids, position_ids=position_ids, embedding_manager=embedding_manager,prospect_words = prospect_words)
 
+            if isinstance(hidden_states, torch.Tensor):
+                hidden_states = [hidden_states]
+
             bsz, seq_len = input_shape
             last_hidden_states = []
 
